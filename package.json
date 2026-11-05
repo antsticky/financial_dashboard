@@ -9,6 +9,7 @@
     "preview": "vite preview",
     "encrypt-config": "node scripts/encrypt-config.mjs",
     "seal-data": "node scripts/seal-data.mjs",
+    "append-data": "node scripts/append-data.mjs",
     "scrape-etf": "node scripts/scrape-etf.mjs",
     "scrape-ft": "node scripts/scrape-ft.mjs",
     "scrape-fx": "node scripts/scrape-fx.mjs",
