@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useAuth } from "react-oidc-context";
 import { useNavigate } from "react-router-dom";
 import { hasKorteRole, readOidcEnv } from "../auth/oidc";
@@ -55,6 +56,8 @@ function ConfiguredLanding() {
 }
 
 function LandingView({ mode }: { mode: LandingMode }) {
+  const [needsSetup, setNeedsSetup] = useState(false);
+
   return (
     <main className="column landing">
       <div className="landing-copy">
@@ -80,17 +83,19 @@ function LandingView({ mode }: { mode: LandingMode }) {
         <div className="actions">
           {mode.kind === "unconfigured" ? (
             <>
+              <p id="signin-help" className="help" role="status">
+                {needsSetup
+                  ? "Sign-in is not set up on this site yet. Add the Zitadel address and client id, then publish again."
+                  : "Sign-in needs the Zitadel address and client id before it can open."}
+              </p>
               <button
                 type="button"
                 className="primary"
                 aria-describedby="signin-help"
+                onClick={() => setNeedsSetup(true)}
               >
                 Sign in
               </button>
-              <p id="signin-help" className="help">
-                Add VITE_ZITADEL_AUTHORITY and VITE_ZITADEL_CLIENT_ID before
-                signing in.
-              </p>
             </>
           ) : null}
           {mode.kind === "signed-out" ? (

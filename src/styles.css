@@ -40,6 +40,7 @@ select {
 
 button {
   -webkit-tap-highlight-color: transparent;
+  cursor: pointer;
 }
 
 h1,
@@ -514,6 +515,12 @@ h3 {
   width: 100%;
   height: auto;
   overflow: visible;
+  pointer-events: none;
+}
+
+.landing .actions {
+  position: relative;
+  z-index: 1;
 }
 
 .spark path {
@@ -557,6 +564,10 @@ a.primary {
   border: 0;
   background: var(--ink);
   color: #f6f3ee;
+}
+
+.primary:active {
+  transform: translateY(1px);
 }
 
 .secondary {
