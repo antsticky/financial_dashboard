@@ -624,8 +624,8 @@ select:focus-visible {
 .hero-value {
   margin-top: 4px;
   font-family: var(--serif);
-  font-size: 40px;
-  line-height: 1;
+  font-size: clamp(28px, 10vw, 40px);
+  line-height: 1.05;
   letter-spacing: -0.03em;
   font-weight: 500;
   font-variant-numeric: tabular-nums;
@@ -898,9 +898,10 @@ select:focus-visible {
 
 .compare-pair strong {
   font-family: var(--serif);
-  font-size: 20px;
+  font-size: clamp(16px, 5.2vw, 20px);
   font-weight: 500;
   font-variant-numeric: tabular-nums;
+  line-height: 1.15;
 }
 
 .meter-track {
@@ -960,21 +961,26 @@ select:focus-visible {
 
 .compare-item-head {
   display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
   justify-content: space-between;
   gap: 8px 12px;
 }
 
 .compare-item-head h3 {
+  flex: none;
   color: var(--ink);
   font-size: 16px;
   font-weight: 600;
 }
 
 .compare-item-head p {
+  min-width: 0;
+  margin-left: auto;
   font-size: 14px;
   font-weight: 650;
   font-variant-numeric: tabular-nums;
+  text-align: right;
 }
 
 .compare-meters {
@@ -986,7 +992,7 @@ select:focus-visible {
 
 .meter-row {
   display: grid;
-  grid-template-columns: 72px 1fr 76px;
+  grid-template-columns: max-content minmax(0, 1fr) max-content;
   align-items: center;
   gap: 8px;
 }
@@ -995,6 +1001,7 @@ select:focus-visible {
   color: var(--muted);
   font-size: 12px;
   font-weight: 600;
+  white-space: nowrap;
 }
 
 .meter-row .meter-track {
@@ -1002,10 +1009,11 @@ select:focus-visible {
 }
 
 .meter-row strong {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 650;
   font-variant-numeric: tabular-nums;
   text-align: right;
+  white-space: nowrap;
 }
 
 .compare-item .caption {

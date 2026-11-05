@@ -249,7 +249,7 @@ function shortDate(date: string): string {
   return new Intl.DateTimeFormat("en", {
     day: day ? "numeric" : undefined,
     month: "short",
-    year: "numeric",
+    year: "2-digit",
     timeZone: "UTC",
   }).format(new Date(Date.UTC(year, monthNumber - 1, day || 1)));
 }

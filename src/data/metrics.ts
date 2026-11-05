@@ -401,7 +401,7 @@ function lotMarket(lot: number, date: string): number | null {
 }
 
 function shortDate(date: string): string {
-  return formatMonth(date, { day: "numeric", month: "short", year: "numeric" });
+  return formatMonth(date, { day: "numeric", month: "short", year: "2-digit" });
 }
 
 function dateBound(dates: string[], key: string, edge: "start" | "end"): string {
