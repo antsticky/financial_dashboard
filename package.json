@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "encrypt-config": "node scripts/encrypt-config.mjs",
+    "seal-data": "node scripts/seal-data.mjs"
   },
   "dependencies": {
     "oidc-client-ts": "^3.5.0",

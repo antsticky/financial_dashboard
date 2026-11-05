@@ -5,7 +5,7 @@ import {
   formatSignedMoney,
   tone,
 } from "../data/format";
-import { banks, holdings } from "../data/mock";
+import { banks, holdings } from "../data/portfolio";
 import { compareDates, type Scope } from "../data/metrics";
 
 export function DateCompare({

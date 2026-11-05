@@ -4,7 +4,7 @@ import {
   snapshots,
   type BankId,
   type HoldingId,
-} from "./mock";
+} from "./portfolio";
 
 export type Scope = {
   bank: BankId | "all";
@@ -257,7 +257,7 @@ function valueForLine(scope: Scope, key: string, month: string): number {
   if (scope.holding === "all") {
     return figures({ bank: scope.bank, holding: key as HoldingId }, month).value;
   }
-  if (scope.bank === "all" && (key === "bank1" || key === "bank2")) {
+  if (scope.bank === "all" && banks.some((bank) => bank.id === key)) {
     return figures({ bank: key, holding: scope.holding }, month).value;
   }
   return figures(scope, month).value;

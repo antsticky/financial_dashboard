@@ -8,7 +8,7 @@ import {
   formatSignedMoney,
   tone,
 } from "../data/format";
-import { banks, type BankId, type HoldingId } from "../data/mock";
+import { banks, type BankId, type HoldingId } from "../data/portfolio";
 import {
   chartLines,
   flowSeries,
@@ -423,7 +423,7 @@ function performanceScope(
   lineKey: string,
 ): Scope {
   if (holding === "all") return { bank, holding: lineKey as HoldingId };
-  if (lineKey === "bank1" || lineKey === "bank2") return { bank: lineKey, holding };
+  if (banks.some((item) => item.id === lineKey)) return { bank: lineKey, holding };
   return { bank, holding };
 }
 

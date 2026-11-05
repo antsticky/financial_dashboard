@@ -40,6 +40,7 @@ jobs:
         env:
           VITE_ZITADEL_AUTHORITY: ${{ vars.VITE_ZITADEL_AUTHORITY }}
           VITE_ZITADEL_CLIENT_ID: ${{ vars.VITE_ZITADEL_CLIENT_ID }}
+          MISC_PASSPHRASE: ${{ secrets.MISC_PASSPHRASE }}
 
       - name: Add Pages fallback
         run: |
