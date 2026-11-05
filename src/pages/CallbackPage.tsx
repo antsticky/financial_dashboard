@@ -1,7 +1,6 @@
 import { useEffect } from "react";
 import { useAuth } from "react-oidc-context";
 import { Link, useNavigate } from "react-router-dom";
-import { hasKorteRole } from "../auth/oidc";
 
 export function CallbackPage() {
   const auth = useAuth();
@@ -13,8 +12,8 @@ export function CallbackPage() {
       navigate("/", { replace: true });
       return;
     }
-    navigate(hasKorteRole(auth.user?.profile) ? "/app" : "/", { replace: true });
-  }, [auth.error, auth.isAuthenticated, auth.isLoading, auth.user?.profile, navigate]);
+    navigate("/app", { replace: true });
+  }, [auth.error, auth.isAuthenticated, auth.isLoading, navigate]);
 
   return (
     <main className="column landing">

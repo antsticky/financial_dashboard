@@ -27,6 +27,11 @@ jobs:
           node-version: 22
           cache: npm
 
+      - name: Unlock misc
+        env:
+          MISC_PASSPHRASE: ${{ secrets.MISC_PASSPHRASE }}
+        run: node scripts/unlock-misc.mjs
+
       - name: Install
         run: npm ci
 

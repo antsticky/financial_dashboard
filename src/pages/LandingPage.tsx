@@ -1,13 +1,12 @@
 import { useState } from "react";
 import { useAuth } from "react-oidc-context";
 import { useNavigate } from "react-router-dom";
-import { hasKorteRole, readOidcEnv } from "../auth/oidc";
+import { readOidcEnv } from "../auth/oidc";
 
 type LandingMode =
   | { kind: "unconfigured" }
   | { kind: "loading" }
   | { kind: "signed-out"; onSignIn: () => void; error?: string }
-  | { kind: "no-access"; onSignOut: () => void }
   | { kind: "ready"; onOpen: () => void; onSignOut: () => void };
 
 export function LandingPage() {
@@ -28,17 +27,6 @@ function ConfiguredLanding() {
           kind: "signed-out",
           error: auth.error?.message,
           onSignIn: () => void auth.signinRedirect(),
-        }}
-      />
-    );
-  }
-
-  if (!hasKorteRole(auth.user?.profile)) {
-    return (
-      <LandingView
-        mode={{
-          kind: "no-access",
-          onSignOut: () => void auth.signoutRedirect(),
         }}
       />
     );
@@ -74,9 +62,6 @@ function LandingView({ mode }: { mode: LandingMode }) {
       </svg>
       <div className="landing-copy">
         {mode.kind === "loading" ? <p className="help">Checking your session.</p> : null}
-        {mode.kind === "no-access" ? (
-          <p className="help">Your account does not have access.</p>
-        ) : null}
         {mode.kind === "signed-out" && mode.error ? (
           <p className="error">{mode.error}</p>
         ) : null}
@@ -112,11 +97,6 @@ function LandingView({ mode }: { mode: LandingMode }) {
                 Sign out
               </button>
             </>
-          ) : null}
-          {mode.kind === "no-access" ? (
-            <button type="button" className="primary" onClick={mode.onSignOut}>
-              Sign out
-            </button>
           ) : null}
         </div>
       </div>

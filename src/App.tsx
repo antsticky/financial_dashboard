@@ -1,6 +1,6 @@
 import { AuthProvider, useAuth } from "react-oidc-context";
 import { BrowserRouter, Navigate, Route, Routes, useNavigate } from "react-router-dom";
-import { createOidcConfig, hasKorteRole, readOidcEnv } from "./auth/oidc";
+import { createOidcConfig, readOidcEnv } from "./auth/oidc";
 import { DashboardPage } from "./pages/DashboardPage";
 import { CallbackPage } from "./pages/CallbackPage";
 import { LandingPage } from "./pages/LandingPage";
@@ -50,7 +50,7 @@ function RequireAccess() {
       </main>
     );
   }
-  if (!auth.isAuthenticated || !hasKorteRole(auth.user?.profile)) {
+  if (!auth.isAuthenticated) {
     return <Navigate to="/" replace />;
   }
   return <DashboardPage onSignOut={() => void auth.signoutRedirect()} />;
