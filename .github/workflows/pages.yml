@@ -39,6 +39,7 @@ jobs:
       - name: Add Pages fallback
         run: |
           cp dist/index.html dist/404.html
+          cp dist/index.html dist/callback.html
           touch dist/.nojekyll
 
       - name: Upload artifact
