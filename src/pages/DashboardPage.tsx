@@ -11,12 +11,14 @@ import {
 } from "../data/format";
 import { banks, displayCurrencies, type BankId, type HoldingId } from "../data/portfolio";
 import {
+  basisPhrase,
+  basisSentence,
   chartLines,
   dateLabel,
   flowSeries,
   holdingsInScope,
+  listDates,
   listMonths,
-  monthMenuLabel,
   setValueRate,
   sliceMonths,
   summarize,
@@ -47,20 +49,22 @@ export function DashboardPage({ onSignOut }: { onSignOut: () => void }) {
   setFormatCurrency(currency);
   setValueRate(currency);
   const scope = useMemo<Scope>(() => ({ bank, holding }), [bank, holding]);
+  const allDates = useMemo(() => listDates(), []);
+  const dates = useMemo(() => sliceMonths(allDates, range), [allDates, range]);
   const allMonths = useMemo(() => listMonths(), []);
-  const months = useMemo(() => sliceMonths(allMonths, range), [allMonths, range]);
-  const summary = useMemo(() => summarize(scope, months), [scope, months, currency]);
+  const rangeMonths = useMemo(() => [...new Set(dates.map((date) => date.slice(0, 7)))], [dates]);
+  const summary = useMemo(() => summarize(scope, dates), [scope, dates, currency]);
   const lines = useMemo(() => chartLines(scope), [scope]);
-  const values = useMemo(() => valueSeries(scope, months), [scope, months, currency]);
-  const flows = useMemo(() => flowSeries(scope, months), [scope, months, currency]);
+  const values = useMemo(() => valueSeries(scope, dates), [scope, dates, currency]);
+  const flows = useMemo(() => flowSeries(scope, dates), [scope, dates, currency]);
   const etfs = holdingsInScope(bank);
   const bankLines = useMemo(
     () => chartLines({ bank, holding: "all" }).filter((line) => line.key !== "total"),
     [bank],
   );
   const bankValues = useMemo(
-    () => valueSeries({ bank, holding: "all" }, months),
-    [bank, months, currency],
+    () => valueSeries({ bank, holding: "all" }, dates),
+    [bank, dates, currency],
   );
   const bankLabel = banks.find((item) => item.id === bank)?.label ?? "All banks";
   const fund = etfs.find((item) => item.id === holding);
@@ -119,7 +123,7 @@ export function DashboardPage({ onSignOut }: { onSignOut: () => void }) {
                 </div>
                 <p className="hero-value">{formatMoney(summary.latestValue)}</p>
                 <p className="caption">
-                  {formatSignedMoney(summary.changeAmount)} {summary.basisDate ? `vs ${dateLabel(summary.basisDate)}` : "since purchase"}
+                  {formatSignedMoney(summary.changeAmount)} {basisPhrase(summary)}
                 </p>
                 <BalanceChart lines={lines} points={values} />
                 <div className="periods" role="group" aria-label="Range">
@@ -163,10 +167,12 @@ export function DashboardPage({ onSignOut }: { onSignOut: () => void }) {
 
               <Breakdown lines={lines} points={values} />
 
-              <section className="card">
-                <h2>Contributions and dividends</h2>
-                <CashflowChart points={flows} />
-              </section>
+              {flows.some((point) => point.contribution !== 0 || point.dividend !== 0) ? (
+                <section className="card">
+                  <h2>Contributions and dividends</h2>
+                  <CashflowChart points={flows} />
+                </section>
+              ) : null}
             </>
           ) : null}
 
@@ -180,7 +186,7 @@ export function DashboardPage({ onSignOut }: { onSignOut: () => void }) {
                   caption="Combined"
                   color={combinedTone}
                   pressed={bank === "all"}
-                  summary={summarize({ bank: "all", holding: "all" }, months)}
+                  summary={summarize({ bank: "all", holding: "all" }, dates)}
                   onClick={() => selectBank("all")}
                 />
                 {banks.map((item) => (
@@ -190,7 +196,7 @@ export function DashboardPage({ onSignOut }: { onSignOut: () => void }) {
                     caption="Account"
                     color={item.color}
                     pressed={bank === item.id}
-                    summary={summarize({ bank: item.id, holding: "all" }, months)}
+                    summary={summarize({ bank: item.id, holding: "all" }, dates)}
                     onClick={() => selectBank(item.id)}
                   />
                 ))}
@@ -198,7 +204,7 @@ export function DashboardPage({ onSignOut }: { onSignOut: () => void }) {
               <section className="card" aria-label="ETF performance">
                 <h2>{bankLabel}</h2>
                 <p className="caption">
-                  Since purchase.
+                  {basisSentence(summarize({ bank, holding: "all" }, dates))}
                 </p>
                 <BalanceChart lines={bankLines} points={bankValues} />
                 <div className="periods" role="group" aria-label="Range">
@@ -211,7 +217,7 @@ export function DashboardPage({ onSignOut }: { onSignOut: () => void }) {
                 </div>
                 <ul className="perf-list">
                   {etfs.map((item) => {
-                    const itemSummary = summarize({ bank, holding: item.id }, months);
+                    const itemSummary = summarize({ bank, holding: item.id }, dates);
                     return (
                       <li key={item.id}>
                         <span className="swatch" style={{ background: item.color }} />
@@ -248,10 +254,10 @@ export function DashboardPage({ onSignOut }: { onSignOut: () => void }) {
                   onClick={() => setHolding("all")}
                 >
                   <strong>All ETFs</strong>
-                  <span className="tile-value">{formatMoney(summarize({ bank, holding: "all" }, months).latestValue)}</span>
+                  <span className="tile-value">{formatMoney(summarize({ bank, holding: "all" }, dates).latestValue)}</span>
                 </button>
                 {etfs.map((item) => {
-                  const itemSummary = summarize({ bank, holding: item.id }, months);
+                  const itemSummary = summarize({ bank, holding: item.id }, dates);
                   return (
                     <button
                       key={item.id}
@@ -272,7 +278,9 @@ export function DashboardPage({ onSignOut }: { onSignOut: () => void }) {
               <section className="card" aria-label="ETF performance">
                 <h2>{fund ? fund.ticker : "All ETFs"}</h2>
                 <p className="caption">
-                  {fund ? `${fund.name}. Since purchase.` : "Since purchase."}
+                  {fund
+                    ? `${fund.name}. ${basisSentence(summarize({ bank, holding }, dates))}`
+                    : basisSentence(summarize({ bank, holding: "all" }, dates))}
                 </p>
                 <BalanceChart lines={lines.filter((line) => line.key !== "total")} points={values} />
                 <div className="periods" role="group" aria-label="Range">
@@ -290,7 +298,7 @@ export function DashboardPage({ onSignOut }: { onSignOut: () => void }) {
                       const account = banks.find((item) => item.id === line.key);
                       const listed = etfs.find((item) => item.id === line.key);
                       const subtitle = account ? fund?.name : listed?.name;
-                      const itemSummary = summarize(performanceScope(bank, holding, line.key), months);
+                      const itemSummary = summarize(performanceScope(bank, holding, line.key), dates);
                       return (
                         <li key={line.key}>
                           <span className="swatch" style={{ background: line.color }} />
@@ -314,7 +322,7 @@ export function DashboardPage({ onSignOut }: { onSignOut: () => void }) {
           ) : null}
 
           {tab === "compare" ? (
-            <DateCompare scope={scope} allMonths={allMonths} rangeMonths={months} />
+            <DateCompare scope={scope} allMonths={allMonths} rangeMonths={rangeMonths} />
           ) : null}
 
           {tab === "more" ? (
@@ -335,7 +343,7 @@ export function DashboardPage({ onSignOut }: { onSignOut: () => void }) {
                   ))}
                 </div>
                 <p className="caption">
-                  {formatMoney(summary.latestValue)} in {monthMenuLabel(summary.latestMonth)}
+                  {formatMoney(summary.latestValue)} on {dateLabel(summary.latestMonth)}
                 </p>
               </section>
               <div className="tile-grid">

@@ -8,7 +8,7 @@ interface ImportMetaEnv {
 declare module "virtual:portfolio" {
   const data: {
     portfolio: unknown;
-    series: Record<string, { month: string; value: number }[]>;
+    series: Record<string, { date?: string; month?: string; value: number }[]>;
   };
   export default data;
 }

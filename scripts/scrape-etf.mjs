@@ -30,7 +30,7 @@ if (output) {
   const { dirname } = await import("node:path");
   mkdirSync(dirname(output), { recursive: true });
   writeFileSync(output, text);
-  console.log(`Wrote ${profile.points.length} months to ${output}`);
+    console.log(`Wrote ${profile.points.length} points to ${output}`);
 } else {
   process.stdout.write(text);
 }
@@ -41,7 +41,7 @@ export async function scrape(id, quoteCurrency, dates) {
     getJson(`/api/etfs/cards?locale=en&currency=${quoteCurrency}&isin=${id}`),
     getJson(`/api/etfs/${id}/quote?locale=en&currency=${quoteCurrency}`),
     getJson(
-      `/api/etfs/${id}/performance-chart?locale=en&currency=${quoteCurrency}&valuesType=MARKET_VALUE&reduceData=true&includeDividends=false&dateFrom=${dates.from}&dateTo=${dates.to}`,
+      `/api/etfs/${id}/performance-chart?locale=en&currency=${quoteCurrency}&valuesType=MARKET_VALUE&reduceData=false&includeDividends=false&dateFrom=${dates.from}&dateTo=${dates.to}`,
     ),
     getText(`/en/etf-profile.html?isin=${id}`),
   ]);
@@ -58,17 +58,17 @@ export async function scrape(id, quoteCurrency, dates) {
       date: quote.latestQuoteDate,
       value: quote.latestQuote?.raw ?? null,
     },
-    points: monthEnds(chart.series ?? []),
+    points: dailyPoints(chart.series ?? []),
   };
 }
 
-function monthEnds(series) {
-  const byMonth = new Map();
+function dailyPoints(series) {
+  const byDate = new Map();
   for (const point of series) {
     if (!point?.date || point.value?.raw == null) continue;
-    byMonth.set(point.date.slice(0, 7), point.value.raw);
+    byDate.set(point.date.slice(0, 10), point.value.raw);
   }
-  return [...byMonth.entries()].map(([month, value]) => ({ month, value }));
+  return [...byDate.entries()].map(([date, value]) => ({ date, value }));
 }
 
 function textField(html, testId) {

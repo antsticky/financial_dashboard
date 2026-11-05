@@ -55,7 +55,7 @@ export async function scrape(id, quoteCurrency, dates) {
     daily.push({ date: facts.date, value: facts.price });
   }
 
-  const points = monthEnds(daily, dates);
+  const points = inRange(daily, dates);
   const last = points.at(-1);
   const ticker = typeof chart.ticker === "string" ? chart.ticker.trim() : "";
   return {
@@ -65,7 +65,7 @@ export async function scrape(id, quoteCurrency, dates) {
     fundCurrency: facts.currency || quoteCurrency,
     currency: quoteCurrency,
     quote: last ? { date: last.date, value: last.value } : { date: null, value: null },
-    points: points.map(({ month, value }) => ({ month, value })),
+    points,
   };
 }
 
@@ -87,16 +87,15 @@ function pageFacts(html) {
   };
 }
 
-function monthEnds(daily, range) {
-  const from = range.from.slice(0, 7);
-  const to = range.to.slice(0, 7);
-  const byMonth = new Map();
+function inRange(daily, range) {
+  const from = range.from.slice(0, 10);
+  const to = range.to.slice(0, 10);
+  const byDate = new Map();
   for (const point of daily) {
-    const month = point.date.slice(0, 7);
-    if (month < from || month > to) continue;
-    byMonth.set(month, { month, date: point.date, value: point.value });
+    if (point.date < from || point.date > to) continue;
+    byDate.set(point.date, point.value);
   }
-  return [...byMonth.values()];
+  return [...byDate.entries()].map(([date, value]) => ({ date, value }));
 }
 
 function utcDay(time) {

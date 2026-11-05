@@ -54,7 +54,7 @@ export async function scrape(id, quoteCurrency, dates) {
     throw new Error("Profile was not found");
   }
 
-  const points = monthEnds(chart.Dates, closes, dates);
+  const points = dailyCloses(chart.Dates, closes, dates);
   const last = points.at(-1);
   return {
     isin: id,
@@ -63,23 +63,21 @@ export async function scrape(id, quoteCurrency, dates) {
     fundCurrency: series.Currency ?? quoteCurrency,
     currency: quoteCurrency,
     quote: last ? { date: last.date, value: last.value } : { date: null, value: null },
-    points: points.map(({ month, value }) => ({ month, value })),
+    points,
   };
 }
 
-function monthEnds(dates, closes, range) {
-  const from = range.from.slice(0, 7);
-  const to = range.to.slice(0, 7);
-  const byMonth = new Map();
+function dailyCloses(dates, closes, range) {
+  const from = range.from.slice(0, 10);
+  const to = range.to.slice(0, 10);
+  const byDate = new Map();
   for (let index = 0; index < dates.length; index += 1) {
     const value = closes[index];
-    const date = dates[index];
-    if (value == null || !date) continue;
-    const month = date.slice(0, 7);
-    if (month < from || month > to) continue;
-    byMonth.set(month, { month, date: date.slice(0, 10), value });
+    const date = dates[index]?.slice(0, 10);
+    if (value == null || !date || date < from || date > to) continue;
+    byDate.set(date, value);
   }
-  return [...byMonth.values()];
+  return [...byDate.entries()].map(([date, value]) => ({ date, value }));
 }
 
 async function getText(path) {

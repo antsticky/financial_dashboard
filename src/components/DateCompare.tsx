@@ -31,7 +31,6 @@ export function DateCompare({
   const parts = comparison.rows.filter((row) => row !== lead);
   const partMax = Math.max(...parts.flatMap((row) => [row.valueFrom, row.valueTo]), 1);
   const leadMax = Math.max(lead.valueFrom, lead.valueTo, 1);
-  const startLabel = compactMonth(comparison.start);
   const endLabel = compactMonth(comparison.end);
 
   function pick(month: string) {
@@ -94,10 +93,10 @@ export function DateCompare({
         <p className="kicker">{lead.label}</p>
         <p className="hero-value">{formatMoney(lead.valueTo)}</p>
         <p className={`caption ${tone(lead.difference)}`}>
-          {`${formatSignedMoney(lead.difference)} ${formatPercent(lead.percent)} from ${startLabel}`}
+          {`${formatSignedMoney(lead.difference)} ${formatPercent(lead.percent)} ${lead.origin}`}
         </p>
         <div className="compare-pair">
-          <Meter label={startLabel} value={lead.valueFrom} max={leadMax} />
+          <Meter label={lead.fromLabel} value={lead.valueFrom} max={leadMax} />
           <Meter label={endLabel} value={lead.valueTo} max={leadMax} color={seriesColor(lead.id)} />
         </div>
         <div className="compare-flows">
@@ -126,7 +125,7 @@ export function DateCompare({
                   </p>
                 </div>
                 <div className="compare-meters">
-                  <MeterRow label={startLabel} value={row.valueFrom} max={partMax} />
+                  <MeterRow label={row.fromLabel} value={row.valueFrom} max={partMax} />
                   <MeterRow label={endLabel} value={row.valueTo} max={partMax} color={seriesColor(row.id)} />
                 </div>
                 <p className="caption">

@@ -8,12 +8,14 @@ import {
   YAxis,
 } from "recharts";
 import { formatCompact, formatMoney } from "../data/format";
-import type { FlowPoint } from "../data/metrics";
+import { dateLabel, monthTickDates, type FlowPoint } from "../data/metrics";
 
 const contribution = "#3d5a80";
 const dividend = "#0d7a4f";
 
 export function CashflowChart({ points }: { points: FlowPoint[] }) {
+  const drawn = points.some((point) => point.contribution !== 0 || point.dividend !== 0);
+  if (!drawn) return null;
   return (
     <>
       <div className="chart">
@@ -21,11 +23,16 @@ export function CashflowChart({ points }: { points: FlowPoint[] }) {
           <BarChart data={points} margin={{ top: 8, right: 18, left: 0, bottom: 0 }}>
             <CartesianGrid stroke="#ebe4d8" vertical={false} />
             <XAxis
-              dataKey="label"
+              dataKey="month"
+              ticks={monthTickDates(points.map((point) => point.month))}
+              tickFormatter={(value: string) =>
+                new Intl.DateTimeFormat("en", { month: "short", timeZone: "UTC" }).format(
+                  new Date(`${value.slice(0, 10)}T00:00:00Z`),
+                )
+              }
               tick={{ fontSize: 11, fill: "#5e5a54" }}
               axisLine={false}
               tickLine={false}
-              interval={points.length > 6 ? 1 : 0}
             />
             <YAxis
               tickFormatter={(value: number) => formatCompact(value)}
@@ -36,6 +43,7 @@ export function CashflowChart({ points }: { points: FlowPoint[] }) {
             />
             <Tooltip
               formatter={(value) => formatMoney(Number(value ?? 0))}
+              labelFormatter={(value) => dateLabel(String(value))}
               contentStyle={tooltipStyle}
             />
             <Bar

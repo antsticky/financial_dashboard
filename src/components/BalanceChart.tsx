@@ -8,7 +8,7 @@ import {
   YAxis,
 } from "recharts";
 import { formatCompact, formatMoney } from "../data/format";
-import type { ChartLine, ValuePoint } from "../data/metrics";
+import { dateLabel, monthTickDates, type ChartLine, type ValuePoint } from "../data/metrics";
 
 export function BalanceChart({
   lines,
@@ -17,6 +17,8 @@ export function BalanceChart({
   lines: ChartLine[];
   points: ValuePoint[];
 }) {
+  const drawn = lines.filter((line) => points.some((point) => typeof point[line.key] === "number"));
+  if (points.length === 0 || drawn.length === 0) return null;
   return (
     <>
       <div className="chart">
@@ -24,11 +26,16 @@ export function BalanceChart({
           <LineChart data={points} margin={{ top: 8, right: 18, left: 0, bottom: 0 }}>
             <CartesianGrid stroke="#ebe4d8" vertical={false} />
             <XAxis
-              dataKey="label"
+              dataKey="month"
+              ticks={monthTickDates(points.map((point) => point.month))}
+              tickFormatter={(value: string) =>
+                new Intl.DateTimeFormat("en", { month: "short", timeZone: "UTC" }).format(
+                  new Date(`${value.slice(0, 10)}T00:00:00Z`),
+                )
+              }
               tick={{ fontSize: 11, fill: "#5e5a54" }}
               axisLine={false}
               tickLine={false}
-              interval={points.length > 6 ? 1 : 0}
             />
             <YAxis
               tickFormatter={(value: number) => formatCompact(value)}
@@ -38,10 +45,12 @@ export function BalanceChart({
               tickLine={false}
             />
             <Tooltip
+              filterNull
               formatter={(value) => formatMoney(Number(value ?? 0))}
+              labelFormatter={(value) => dateLabel(String(value))}
               contentStyle={tooltipStyle}
             />
-            {lines.map((line) => (
+            {drawn.map((line) => (
               <Line
                 key={line.key}
                 type="monotone"
@@ -50,6 +59,7 @@ export function BalanceChart({
                 stroke={line.color}
                 strokeWidth={line.key === "total" ? 2.5 : 2}
                 dot={false}
+                connectNulls={false}
                 activeDot={{ r: 4 }}
               />
             ))}
@@ -57,7 +67,7 @@ export function BalanceChart({
         </ResponsiveContainer>
       </div>
       <ul className="legend">
-        {lines.map((line) => (
+        {drawn.map((line) => (
           <li key={line.key}>
             <span className="swatch" style={{ background: line.color }} />
             {line.label}
