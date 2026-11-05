@@ -1,5 +1,6 @@
-import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { scrape } from "./scrape-etf.mjs";
 import { seal } from "./seal.mjs";
 import { sealedName } from "./sealed-name.mjs";
 
@@ -37,14 +38,36 @@ const symbols = [
   ]),
 ];
 
+const scraped = new Map(
+  config.indexes
+    .filter((index) => index.market.provider === "justetf")
+    .map((index) => [index.market.symbol, index]),
+);
+
+mkdirSync(outputDir, { recursive: true });
+for (const name of readdirSync(outputDir)) {
+  if (name.endsWith(".bin")) rmSync(join(outputDir, name));
+}
 rmSync(join(outputDir, "history"), { recursive: true, force: true });
 rmSync(join(outputDir, "portfolio.bin"), { force: true });
-mkdirSync(outputDir, { recursive: true });
+
 writeSealed(join(outputDir, sealedName(secret, "portfolio")), config, secret);
 for (const symbol of symbols) {
-  writeSealed(join(outputDir, sealedName(secret, symbol)), history(symbol), secret);
+  const series = scraped.has(symbol) ? await scrapedHistory(symbol) : history(symbol);
+  writeSealed(join(outputDir, sealedName(secret, symbol)), series, secret);
 }
 console.log(`Sealed config and ${symbols.length} histories in ${outputDir}`);
+
+async function scrapedHistory(symbol) {
+  const profile = await scrape(symbol, "EUR", { from: `${months[0]}-01`, to: `${months.at(-1)}-31` });
+  const byMonth = new Map(profile.points.map((point) => [point.month, point.value]));
+  const points = months.map((month) => {
+    const value = byMonth.get(month);
+    if (value == null) throw new Error("Scraped series does not cover every month");
+    return { month, value };
+  });
+  return { symbol, points };
+}
 
 function history(symbol) {
   const fx = symbol.includes("=X");
