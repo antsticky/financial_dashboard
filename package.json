@@ -9,7 +9,9 @@
     "preview": "vite preview",
     "encrypt-config": "node scripts/encrypt-config.mjs",
     "seal-data": "node scripts/seal-data.mjs",
-    "scrape-etf": "node scripts/scrape-etf.mjs"
+    "scrape-etf": "node scripts/scrape-etf.mjs",
+    "scrape-ft": "node scripts/scrape-ft.mjs",
+    "scrape-erste": "node scripts/scrape-erste.mjs"
   },
   "dependencies": {
     "oidc-client-ts": "^3.5.0",

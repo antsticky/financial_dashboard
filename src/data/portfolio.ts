@@ -40,7 +40,14 @@ type PortfolioFile = {
     market: { symbol: string };
   }[];
   fx: { from: string; to: string; symbol: string; invert?: boolean }[];
-  positions: { bankId: string; indexId: string; notional: number }[];
+  positions: { bankId: string; indexId: string; notional: number; bought: string; buyPrice: number }[];
+};
+
+export type Purchase = {
+  bankId: BankId;
+  holdingId: HoldingId;
+  bought: string;
+  costEur: number;
 };
 
 const portfolio = source.portfolio as PortfolioFile;
@@ -78,18 +85,37 @@ export const holdings: Holding[] = portfolio.indexes.map((index) => ({
   color: index.color,
 }));
 
-export const snapshots: MonthSnapshot[] = portfolio.positions.flatMap((position) => {
-  const index = portfolio.indexes.find((item) => item.id === position.indexId);
-  if (!index) throw new Error(`Unknown index ${position.indexId}`);
-  return pointsFor(index.market.symbol).map((point) => ({
-    month: point.month,
+export const purchases: Purchase[] = portfolio.positions.map((position) => {
+  const index = indexFor(position.indexId);
+  const month = position.bought.slice(0, 7);
+  return {
     bankId: position.bankId,
     holdingId: position.indexId,
-    value: point.value * position.notional * eurPerUnit(index.quoteCurrency, point.month),
-    contribution: 0,
-    dividend: 0,
-  }));
+    bought: position.bought,
+    costEur: position.buyPrice * position.notional * eurPerUnit(index.quoteCurrency, month),
+  };
 });
+
+export const snapshots: MonthSnapshot[] = portfolio.positions.flatMap((position) => {
+  const index = indexFor(position.indexId);
+  const bought = position.bought.slice(0, 7);
+  return pointsFor(index.market.symbol)
+    .filter((point) => point.month >= bought)
+    .map((point) => ({
+      month: point.month,
+      bankId: position.bankId,
+      holdingId: position.indexId,
+      value: point.value * position.notional * eurPerUnit(index.quoteCurrency, point.month),
+      contribution: 0,
+      dividend: 0,
+    }));
+});
+
+function indexFor(id: string) {
+  const index = portfolio.indexes.find((item) => item.id === id);
+  if (!index) throw new Error("Unknown holding");
+  return index;
+}
 
 function pointsFor(symbol: string): Point[] {
   const points = series[symbol];

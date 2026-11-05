@@ -62,7 +62,13 @@ function validatePortfolio(config) {
       throw new Error(`unknown index ${position.indexId}`);
     }
     if (typeof position.notional !== "number" || position.notional <= 0) {
-      throw new Error(`notional for ${position.bankId} ${position.indexId} must be a positive number`);
+      throw new Error("each position needs a positive notional");
+    }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(position.bought)) {
+      throw new Error("each position needs a buy date");
+    }
+    if (typeof position.buyPrice !== "number" || position.buyPrice <= 0) {
+      throw new Error("each position needs a positive buy price");
     }
   }
 }

@@ -12,6 +12,7 @@ import {
 import { banks, displayCurrencies, type BankId, type HoldingId } from "../data/portfolio";
 import {
   chartLines,
+  dateLabel,
   flowSeries,
   holdingsInScope,
   listMonths,
@@ -118,7 +119,7 @@ export function DashboardPage({ onSignOut }: { onSignOut: () => void }) {
                 </div>
                 <p className="hero-value">{formatMoney(summary.latestValue)}</p>
                 <p className="caption">
-                  {formatSignedMoney(summary.changeAmount)} vs {monthMenuLabel(summary.firstMonth)}
+                  {formatSignedMoney(summary.changeAmount)} {summary.basisDate ? `vs ${dateLabel(summary.basisDate)}` : "since purchase"}
                 </p>
                 <BalanceChart lines={lines} points={values} />
                 <div className="periods" role="group" aria-label="Range">
@@ -197,7 +198,7 @@ export function DashboardPage({ onSignOut }: { onSignOut: () => void }) {
               <section className="card" aria-label="ETF performance">
                 <h2>{bankLabel}</h2>
                 <p className="caption">
-                  {`Each ETF from ${monthMenuLabel(months[0])} to ${monthMenuLabel(months[months.length - 1])}.`}
+                  Since purchase.
                 </p>
                 <BalanceChart lines={bankLines} points={bankValues} />
                 <div className="periods" role="group" aria-label="Range">
@@ -271,9 +272,7 @@ export function DashboardPage({ onSignOut }: { onSignOut: () => void }) {
               <section className="card" aria-label="ETF performance">
                 <h2>{fund ? fund.ticker : "All ETFs"}</h2>
                 <p className="caption">
-                  {fund
-                    ? `${fund.name}, ${monthMenuLabel(months[0])} to ${monthMenuLabel(months[months.length - 1])}.`
-                    : `Each ETF from ${monthMenuLabel(months[0])} to ${monthMenuLabel(months[months.length - 1])}.`}
+                  {fund ? `${fund.name}. Since purchase.` : "Since purchase."}
                 </p>
                 <BalanceChart lines={lines.filter((line) => line.key !== "total")} points={values} />
                 <div className="periods" role="group" aria-label="Range">

@@ -1,6 +1,8 @@
 import { mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { scrape } from "./scrape-etf.mjs";
+import { scrape as scrapeErste } from "./scrape-erste.mjs";
+import { scrape as scrapeEtf } from "./scrape-etf.mjs";
+import { scrape as scrapeFt } from "./scrape-ft.mjs";
 import { seal } from "./seal.mjs";
 import { sealedName } from "./sealed-name.mjs";
 
@@ -38,9 +40,10 @@ const symbols = [
   ]),
 ];
 
+const scrapers = { justetf: scrapeEtf, ft: scrapeFt, erste: scrapeErste };
 const scraped = new Map(
   config.indexes
-    .filter((index) => index.market.provider === "justetf")
+    .filter((index) => scrapers[index.market.provider])
     .map((index) => [index.market.symbol, index]),
 );
 
@@ -59,7 +62,11 @@ for (const symbol of symbols) {
 console.log(`Sealed config and ${symbols.length} histories in ${outputDir}`);
 
 async function scrapedHistory(symbol) {
-  const profile = await scrape(symbol, "EUR", { from: `${months[0]}-01`, to: `${months.at(-1)}-31` });
+  const index = scraped.get(symbol);
+  const profile = await scrapers[index.market.provider](symbol, index.quoteCurrency, {
+    from: `${months[0]}-01`,
+    to: `${months.at(-1)}-31`,
+  });
   const byMonth = new Map(profile.points.map((point) => [point.month, point.value]));
   const points = months.map((month) => {
     const value = byMonth.get(month);

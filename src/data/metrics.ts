@@ -2,6 +2,7 @@ import {
   banks,
   holdings,
   perBase,
+  purchases,
   snapshots,
   type BankId,
   type HoldingId,
@@ -36,7 +37,7 @@ export type FlowPoint = {
 export type Summary = {
   latestValue: number;
   latestMonth: string;
-  firstMonth: string;
+  basisDate: string | null;
   changeAmount: number;
   changePercent: number | null;
   dividends: number;
@@ -91,6 +92,16 @@ export function monthLabel(month: string): string {
 
 export function monthMenuLabel(month: string): string {
   return formatMonth(month, { month: "long", year: "numeric" });
+}
+
+export function dateLabel(date: string): string {
+  const [year, month, day] = date.split("-").map(Number);
+  return new Intl.DateTimeFormat("en", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(new Date(Date.UTC(year, month - 1, day)));
 }
 
 export function holdingsInScope(bank: Scope["bank"]) {
@@ -168,9 +179,9 @@ export function flowSeries(scope: Scope, months: string[]): FlowPoint[] {
 }
 
 export function summarize(scope: Scope, months: string[]): Summary {
-  const first = figures(scope, months[0]);
   const last = figures(scope, months[months.length - 1]);
-  const changeAmount = last.value - first.value;
+  const basis = purchaseBasis(scope);
+  const changeAmount = last.value - basis.cost;
   let dividends = 0;
   for (const month of months) {
     dividends += figures(scope, month).dividend;
@@ -178,9 +189,9 @@ export function summarize(scope: Scope, months: string[]): Summary {
   return {
     latestValue: last.value,
     latestMonth: months[months.length - 1],
-    firstMonth: months[0],
+    basisDate: basis.date,
     changeAmount,
-    changePercent: first.value === 0 ? null : changeAmount / first.value,
+    changePercent: basis.cost === 0 ? null : changeAmount / basis.cost,
     dividends,
   };
 }
@@ -279,6 +290,20 @@ function banksForHolding(holding: HoldingId) {
   return banks.filter((bank) => ids.has(bank.id));
 }
 
+function purchaseBasis(scope: Scope): { cost: number; date: string | null } {
+  const rows = purchases.filter(
+    (purchase) =>
+      (scope.bank === "all" || purchase.bankId === scope.bank) &&
+      (scope.holding === "all" || purchase.holdingId === scope.holding),
+  );
+  const dates = [...new Set(rows.map((purchase) => purchase.bought))];
+  const cost = rows.reduce(
+    (sum, purchase) => sum + purchase.costEur * valueRate(purchase.bought.slice(0, 7)),
+    0,
+  );
+  return { cost, date: dates.length === 1 ? dates[0] : null };
+}
+
 function figures(scope: Scope, month: string): Figures {
   const rows = snapshots.filter(
     (snapshot) =>
@@ -287,7 +312,7 @@ function figures(scope: Scope, month: string): Figures {
       (scope.holding === "all" || snapshot.holdingId === scope.holding),
   );
   if (rows.length === 0) {
-    throw new Error(`Missing snapshot for ${scope.bank} ${scope.holding} ${month}`);
+    return { value: 0, contribution: 0, dividend: 0 };
   }
   const scale = valueRate(month);
   return rows.reduce(
