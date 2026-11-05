@@ -18,7 +18,6 @@ import {
   flowSeries,
   holdingsInScope,
   listDates,
-  listMonths,
   setValueRate,
   sliceMonths,
   summarize,
@@ -51,8 +50,6 @@ export function DashboardPage({ onSignOut }: { onSignOut: () => void }) {
   const scope = useMemo<Scope>(() => ({ bank, holding }), [bank, holding]);
   const allDates = useMemo(() => listDates(), []);
   const dates = useMemo(() => sliceMonths(allDates, range), [allDates, range]);
-  const allMonths = useMemo(() => listMonths(), []);
-  const rangeMonths = useMemo(() => [...new Set(dates.map((date) => date.slice(0, 7)))], [dates]);
   const summary = useMemo(() => summarize(scope, dates), [scope, dates, currency]);
   const lines = useMemo(() => chartLines(scope), [scope]);
   const values = useMemo(() => valueSeries(scope, dates), [scope, dates, currency]);
@@ -322,7 +319,7 @@ export function DashboardPage({ onSignOut }: { onSignOut: () => void }) {
           ) : null}
 
           {tab === "compare" ? (
-            <DateCompare scope={scope} allMonths={allMonths} rangeMonths={rangeMonths} />
+            <DateCompare scope={scope} dates={allDates} rangeDates={dates} />
           ) : null}
 
           {tab === "more" ? (
