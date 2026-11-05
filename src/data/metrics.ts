@@ -1,6 +1,7 @@
 import {
   banks,
   holdings,
+  perBase,
   snapshots,
   type BankId,
   type HoldingId,
@@ -63,6 +64,12 @@ type Figures = {
   contribution: number;
   dividend: number;
 };
+
+let valueRate = (month: string) => perBase("EUR", month);
+
+export function setValueRate(currency: string) {
+  valueRate = (month: string) => perBase(currency, month);
+}
 
 const combinedLine: ChartLine = {
   key: "total",
@@ -282,11 +289,12 @@ function figures(scope: Scope, month: string): Figures {
   if (rows.length === 0) {
     throw new Error(`Missing snapshot for ${scope.bank} ${scope.holding} ${month}`);
   }
+  const scale = valueRate(month);
   return rows.reduce(
     (sum, snapshot) => ({
-      value: sum.value + snapshot.value,
-      contribution: sum.contribution + snapshot.contribution,
-      dividend: sum.dividend + snapshot.dividend,
+      value: sum.value + snapshot.value * scale,
+      contribution: sum.contribution + snapshot.contribution * scale,
+      dividend: sum.dividend + snapshot.dividend * scale,
     }),
     { value: 0, contribution: 0, dividend: 0 },
   );

@@ -6,15 +6,17 @@ import {
   formatMoney,
   formatPercent,
   formatSignedMoney,
+  setFormatCurrency,
   tone,
 } from "../data/format";
-import { banks, type BankId, type HoldingId } from "../data/portfolio";
+import { banks, displayCurrencies, type BankId, type HoldingId } from "../data/portfolio";
 import {
   chartLines,
   flowSeries,
   holdingsInScope,
   listMonths,
   monthMenuLabel,
+  setValueRate,
   sliceMonths,
   summarize,
   valueSeries,
@@ -40,13 +42,16 @@ export function DashboardPage({ onSignOut }: { onSignOut: () => void }) {
   const [range, setRange] = useState<RangeLength>(6);
   const [tab, setTab] = useState<Tab>("overview");
   const [menuOpen, setMenuOpen] = useState(false);
+  const [currency, setCurrency] = useState(displayCurrencies[0] ?? "EUR");
+  setFormatCurrency(currency);
+  setValueRate(currency);
   const scope = useMemo<Scope>(() => ({ bank, holding }), [bank, holding]);
   const allMonths = useMemo(() => listMonths(), []);
   const months = useMemo(() => sliceMonths(allMonths, range), [allMonths, range]);
-  const summary = useMemo(() => summarize(scope, months), [scope, months]);
+  const summary = useMemo(() => summarize(scope, months), [scope, months, currency]);
   const lines = useMemo(() => chartLines(scope), [scope]);
-  const values = useMemo(() => valueSeries(scope, months), [scope, months]);
-  const flows = useMemo(() => flowSeries(scope, months), [scope, months]);
+  const values = useMemo(() => valueSeries(scope, months), [scope, months, currency]);
+  const flows = useMemo(() => flowSeries(scope, months), [scope, months, currency]);
   const etfs = holdingsInScope(bank);
   const bankLines = useMemo(
     () => chartLines({ bank, holding: "all" }).filter((line) => line.key !== "total"),
@@ -54,7 +59,7 @@ export function DashboardPage({ onSignOut }: { onSignOut: () => void }) {
   );
   const bankValues = useMemo(
     () => valueSeries({ bank, holding: "all" }, months),
-    [bank, months],
+    [bank, months, currency],
   );
   const bankLabel = banks.find((item) => item.id === bank)?.label ?? "All banks";
   const fund = etfs.find((item) => item.id === holding);
@@ -316,8 +321,20 @@ export function DashboardPage({ onSignOut }: { onSignOut: () => void }) {
           {tab === "more" ? (
             <>
               <section className="card more-card">
-                <p className="kicker">Viewing</p>
-                <p className="more-scope">{scopeLine}</p>
+                <p className="kicker">Currency</p>
+                <p className="more-scope">{currency}</p>
+                <div className="periods currency-choice" role="group" aria-label="Currency">
+                  {displayCurrencies.map((code) => (
+                    <button
+                      key={code}
+                      type="button"
+                      aria-pressed={currency === code}
+                      onClick={() => setCurrency(code)}
+                    >
+                      {code}
+                    </button>
+                  ))}
+                </div>
                 <p className="caption">
                   {formatMoney(summary.latestValue)} in {monthMenuLabel(summary.latestMonth)}
                 </p>

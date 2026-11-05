@@ -70,14 +70,15 @@ async function scrapedHistory(symbol) {
 }
 
 function history(symbol) {
-  const fx = symbol.includes("=X");
-  let value = startFor(symbol);
+  const quote = config.fx.find((item) => item.symbol === symbol);
+  const anchor = quote?.anchor ?? startFor(symbol);
+  let value = anchor;
   let state = hash(symbol);
   const points = months.map((month) => {
     state = (Math.imul(state, 1664525) + 1013904223) >>> 0;
-    const shock = ((state % 1000) / 1000 - 0.48) * (fx ? 0.012 : 0.04);
-    value = Math.max(fx ? 0.2 : 1, value * (1 + shock));
-    const digits = fx ? 4 : 2;
+    const shock = ((state % 1000) / 1000 - 0.48) * (quote ? 0.012 : 0.04);
+    value = Math.max(anchor >= 20 ? 1 : 0.2, value * (1 + shock));
+    const digits = anchor >= 20 ? 2 : 4;
     const rounded = Number(value.toFixed(digits));
     value = rounded;
     return { month, value: rounded };

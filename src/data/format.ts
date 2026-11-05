@@ -1,8 +1,8 @@
-const money = new Intl.NumberFormat("en-IE", {
-  style: "currency",
-  currency: "EUR",
-  maximumFractionDigits: 0,
-});
+let currencyCode = "EUR";
+
+export function setFormatCurrency(code: string) {
+  currencyCode = code;
+}
 
 const compact = new Intl.NumberFormat("en-IE", {
   notation: "compact",
@@ -10,12 +10,16 @@ const compact = new Intl.NumberFormat("en-IE", {
 });
 
 export function formatMoney(value: number): string {
-  return money.format(value);
+  return new Intl.NumberFormat("en-IE", {
+    style: "currency",
+    currency: currencyCode,
+    maximumFractionDigits: 0,
+  }).format(value);
 }
 
 export function formatSignedMoney(value: number): string {
-  if (value > 0) return `+${money.format(value)}`;
-  return money.format(value);
+  if (value > 0) return `+${formatMoney(value)}`;
+  return formatMoney(value);
 }
 
 export function formatPercent(value: number | null): string {

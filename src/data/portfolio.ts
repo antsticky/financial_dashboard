@@ -56,6 +56,21 @@ export const banks: Bank[] = portfolio.banks.map((bank, index) => ({
   color: portfolio.colors[index],
 }));
 
+const quoted = new Set(portfolio.fx.flatMap((pair) => [pair.from, pair.to]));
+export const displayCurrencies = ["EUR", "USD", "HUF"].filter(
+  (code) => code === portfolio.baseCurrency || quoted.has(code),
+);
+
+export function perBase(currency: string, month: string): number {
+  if (currency === portfolio.baseCurrency) return 1;
+  const direct = portfolio.fx.find((pair) => pair.from === portfolio.baseCurrency && pair.to === currency);
+  if (direct) return pairQuote(direct, month);
+  const inverse = portfolio.fx.find((pair) => pair.from === currency && pair.to === portfolio.baseCurrency);
+  if (!inverse) throw new Error(`Missing FX for ${currency}`);
+  const intoBase = pairQuote(inverse, month);
+  return intoBase === 0 ? 0 : 1 / intoBase;
+}
+
 export const holdings: Holding[] = portfolio.indexes.map((index) => ({
   id: index.id,
   ticker: index.ticker,
@@ -86,7 +101,11 @@ function eurPerUnit(currency: string, month: string): number {
   if (currency === portfolio.baseCurrency) return 1;
   const pair = portfolio.fx.find((item) => item.from === currency && item.to === portfolio.baseCurrency);
   if (!pair) throw new Error(`Missing FX for ${currency}`);
+  return pairQuote(pair, month);
+}
+
+function pairQuote(pair: PortfolioFile["fx"][number], month: string): number {
   const point = pointsFor(pair.symbol).find((item) => item.month === month);
-  if (!point || point.value === 0) throw new Error(`Missing FX ${pair.symbol} ${month}`);
+  if (!point || point.value === 0) throw new Error(`Missing FX for ${pair.from}`);
   return pair.invert ? 1 / point.value : point.value;
 }
